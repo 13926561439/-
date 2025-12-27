@@ -9,6 +9,8 @@ angle0="右"
 height0="上"
 height1="上"
 a=0
+b=30
+py.font.init()
 def events():
     global me1,wall1,level,height0,a
     for event in py.event.get():
@@ -56,11 +58,13 @@ def events():
     me1.jump()
     me1.x=me1.rect.x
     me1.y=me1.rect.y
+    me1.damage()
     if me1.x>1140:
         level+=1
         me1.rect.x=0
         me1.rect.y=300
         wall1.new()
+        dama.new()
     me1.rect.clamp_ip(py.Rect(0, 0, screenx, screeny))
     if py.sprite.collide_mask(me1,wall1):
         me1.g=0.1
@@ -173,6 +177,14 @@ class Me(py.sprite.Sprite):
             cs1.turn(angle0,height0)
         else:
             a=0
+    def damage(self):
+        global death,background,b
+        if py.sprite.collide_mask(dama,self):
+            me1.rect.x=0
+            me1.rect.y=300
+            death+=1
+            background=py.image.load("背景2.png").convert()
+            b=0
 class Wall(py.sprite.Sprite):
     def __init__(self,x2,y2):
         super().__init__()
@@ -204,20 +216,50 @@ class Cs:
             self.image=py.transform.scale(self.image0,(70,77))
         else:
             self.image=py.transform.scale(self.image0,(70,39))
+class Damage(py.sprite.Sprite):
+    def __init__(self,x4,y4):
+        super().__init__()
+        self.x=x4
+        self.y=y4
+        self.image0=py.image.load(f"伤害{level}.png").convert_alpha()
+        self.image=py.transform.scale(self.image0,(1200,480))
+        self.rect=self.image.get_rect()
+        self.rect.topleft=(self.x,self.y)
+        self.mask=py.mask.from_surface(self.image)
+    def new(self):
+        try:
+            self.image0=py.image.load(f"伤害{level}.png").convert_alpha()
+        except:
+            self.image0=py.image.load("伤害1.png").convert_alpha()
+        self.image=py.transform.scale(self.image0,(1200,480))
+        self.rect=self.image.get_rect()
+        self.rect.topleft=(self.x,self.y)
+        self.mask=py.mask.from_surface(self.image)
 if __name__=="__main__":
     py.init()
+    death=0
     screen=py.display.set_mode((screenx,screeny))
     py.display.set_caption("优秀小跑酷")
-    background=py.image.load("背景.png").convert()
+    background=py.image.load("背景1.png").convert()
     screen.blit(background,(0,0))
     me1=Me(0,300)
     wall1=Wall(0,0)
     cs1=Cs(0,300)
+    dama=Damage(0,0)
     clock=py.time.Clock()
     while True:
+        screen.fill((255,255,255))
         clock.tick(60)
+        if b<5:
+            b+=1
+        else:
+            background=py.image.load("背景1.png").convert()
         screen.blit(background,(0,0))
         screen.blit(me1.image,(me1.x,me1.y))
+        try:
+            screen.blit(dama.image,(dama.x,dama.y))
+        except:
+            pass
         screen.blit(wall1.image,(wall1.x,wall1.y))
         if angle0=="右":
             if height0=="上":
@@ -229,5 +271,11 @@ if __name__=="__main__":
                 screen.blit(cs1.image,(me1.x-11,me1.y-15))
             else:
                 screen.blit(cs1.image,(me1.x-11,me1.y-8))
+        font=py.font.Font("C:/Windows/Fonts/simhei.ttf",18)
+        death_text=font.render(f"恣睢:{death}",True,(0,0,0))
+        font=py.font.Font("C:/Windows/Fonts/simhei.ttf",36)
+        level_text=font.render(f"{level}",True,(0,0,0))
+        screen.blit(death_text,(1100,10))
+        screen.blit(level_text,(10,10))
         py.display.update()
         events()
